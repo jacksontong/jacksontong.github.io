@@ -13,7 +13,7 @@ This post demonstrates how to create a straightforward IoC container in Go. The 
 
 ## Implementing the IoC Container
 
-### Step 1: Define the Container Type and Containers Variable
+### Step 1: Define the Container Type and Container Variable
 
 ```go
 package ioc
@@ -28,20 +28,20 @@ type container struct {
 	mu       sync.RWMutex
 }
 
-var containers = &container{
+var globalContainer = &container{
 	services: make(map[string]interface{}),
 }
 ```
 
-The `container` struct stores registered services in a map and ensures thread-safe access using a read-write mutex. The `containers` variable is a singleton instance of the `container` struct.
+The `container` struct stores registered services in a map and ensures thread-safe access using a read-write mutex. The `globalContainer` variable is a singleton instance of the `container` struct.
 
 ### Step 2: Define the Register Function
 
 ```go
 func Register(name string, service interface{}) {
-	containers.mu.Lock()
-	defer containers.mu.Unlock()
-	containers.services[name] = service
+	globalContainer.mu.Lock()
+	defer globalContainer.mu.Unlock()
+	globalContainer.services[name] = service
 }
 ```
 
@@ -51,10 +51,10 @@ The `Register` function associates a name with a service and locks the container
 
 ```go
 func Resolve[T any](name string) (T, error) {
-	containers.mu.RLock()
-	defer containers.mu.RUnlock()
+	globalContainer.mu.RLock()
+	defer globalContainer.mu.RUnlock()
 
-	service, exists := containers.services[name]
+	service, exists := globalContainer.services[name]
 	if !exists {
 		var zero T
 		return zero, fmt.Errorf("service not found: %s", name)
@@ -124,6 +124,6 @@ For a deeper understanding of IoC and dependency injection, check out [Martin Fo
 You can explore the full source code here:
 
 1. [Gist: Simple IoC Container](https://gist.github.com/jacksontong/b05f00458416cb830ad6820a9cfc59f4)
-2. [Go Playground Example](https://go.dev/play/p/6Aw5hTNXXBQ)
+2. [Go Playground Example](https://go.dev/play/p/jgDjMHZNQBf)
 
 I hope this guide helps you in your Go projects. If you have questions or suggestions, feel free to share them in the comments!
