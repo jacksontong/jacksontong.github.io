@@ -4,15 +4,6 @@ title: About
 permalink: /about/
 ---
 
-This is the base Jekyll theme. You can find out more info about customizing your Jekyll theme, as well as basic Jekyll usage documentation at [jekyllrb.com](https://jekyllrb.com/)
+I'm Jackson Tong, a senior fullstack web developer with a passion for creating efficient and scalable web applications. I've been working as a software developer since 2014, and over the years, I've gained extensive experience in both frontend and backend development.
 
-You can find the source code for Minima at GitHub:
-[jekyll][jekyll-organization] /
-[minima](https://github.com/jekyll/minima)
-
-You can find the source code for Jekyll at GitHub:
-[jekyll][jekyll-organization] /
-[jekyll](https://github.com/jekyll/jekyll)
-
-
-[jekyll-organization]: https://github.com/jekyll
+This is my personal blog where I share my experiences, insights, and tips about coding and software architecture. I hope you find the content helpful and engaging.
