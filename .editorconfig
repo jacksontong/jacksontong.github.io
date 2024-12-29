@@ -15,6 +15,9 @@ insert_final_newline = true
 [*.{yaml,yml}]
 indent_size = 2
 
+[*.html]
+indent_size = 2
+
 # Makefile settings
 [Makefile]
 indent_style = tab
