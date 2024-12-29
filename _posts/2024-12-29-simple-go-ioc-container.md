@@ -72,7 +72,7 @@ func Resolve[T any](name string) (T, error) {
 
 The `Resolve` function retrieves a service from the container by name and casts it to the specified type. It locks the container for reading to ensure thread safety.
 
-### Usage
+## Usage
 
 To use this IoC container, you can register and resolve services as shown below:
 
