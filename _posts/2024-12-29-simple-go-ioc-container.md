@@ -2,7 +2,7 @@
 layout: post
 title: "Simple Inversion of Control Container in Go"
 date: 2024-12-29
-categories: go ioc
+tags: go ioc
 ---
 
 Inversion of Control (IoC) containers are a design pattern used to manage dependencies in a software application. They help decouple the creation of objects from their usage, making the code more modular and easier to test.
