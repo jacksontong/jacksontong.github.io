@@ -1,4 +1,4 @@
-# Code Chronicles
+# BrickCrafted
 
 This is the source code for my personal blog written in Jekyll.
 
