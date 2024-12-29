@@ -111,4 +111,4 @@ Inversion of Control is a powerful technique, but it's easy to make a mistake. Y
 
 You can find the full source code at:
 1. [https://gist.github.com/jacksontong/b05f00458416cb830ad6820a9cfc59f4](https://gist.github.com/jacksontong/b05f00458416cb830ad6820a9cfc59f4).
-2. https://go.dev/play/p/6Aw5hTNXXBQ
+2. [https://go.dev/play/p/6Aw5hTNXXBQ](https://go.dev/play/p/6Aw5hTNXXBQ)
