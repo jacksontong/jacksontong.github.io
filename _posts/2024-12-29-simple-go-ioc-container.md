@@ -107,4 +107,8 @@ func main() {
 
 This simple IoC container can be extended to support more advanced features as needed. I hope you find this example useful for your Go projects.
 
-You can find the full source code at [https://gist.github.com/jacksontong/b05f00458416cb830ad6820a9cfc59f4](https://gist.github.com/jacksontong/b05f00458416cb830ad6820a9cfc59f4).
+Inversion of Control is a powerful technique, but it's easy to make a mistake. You should read this post from Martin Fowler to have a better understanding: [https://martinfowler.com/articles/injection.html](https://martinfowler.com/articles/injection.html).
+
+You can find the full source code at:
+1. [https://gist.github.com/jacksontong/b05f00458416cb830ad6820a9cfc59f4](https://gist.github.com/jacksontong/b05f00458416cb830ad6820a9cfc59f4).
+2. https://go.dev/play/p/6Aw5hTNXXBQ
