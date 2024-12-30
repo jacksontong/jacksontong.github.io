@@ -16,5 +16,5 @@ This is the source code for my personal blog written in Jekyll.
 To start the server with hot reloading, run:
 
 ```sh
-make serve-dev
+make serve
 ```
