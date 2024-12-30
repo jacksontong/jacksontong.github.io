@@ -28,7 +28,7 @@ github_username:  jacksontong
 google_analytics: true
 
 # Build settings
-remote_theme: jekyll/minima
+remote_theme: jekyll/minima@6b9b78d
 plugins:
   - jekyll-feed
   - jekyll-remote-theme
