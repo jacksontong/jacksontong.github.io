@@ -17,12 +17,15 @@ Here is an example implementation for managing configuration:
 package config
 
 type Config struct {
-    AppPort     string `mapstructure:"APP_PORT"`
-    Environment string `mapstructure:"ENVIRONMENT"`
+	AppPort       string `mapstructure:"APP_PORT"`
+	Environment   string `mapstructure:"ENVIRONMENT"`
 }
 ```
 
 The `Config` struct serves as the blueprint for your application's configuration. Each field represents a configuration value, annotated with a `mapstructure` tag to specify the corresponding environment variable name.
+
+- **Struct Tags**: The `mapstructure` tag explicitly defines which environment variable maps to each field. For example, `APP_PORT` maps to `AppPort`.
+- **Fallback Mechanism**: If no `mapstructure` tag is provided, the field name (converted to uppercase) is used as the default environment variable name.
 
 ### Step 2: Define the LoadConfig Function
 
@@ -56,6 +59,12 @@ func LoadConfig() (*Config, error) {
     return cfg, nil
 }
 ```
+
+The `LoadConfig` function populates the `Config` struct with values from environment variables:
+
+- **Default Values**: Initializes the struct with sensible defaults (e.g., `AppPort` is set to `8080` and `Environment` to `development`).
+- **Reflection**: Iterates over each struct field using Go’s `reflect` package.
+- **Environment Variable Lookup**: Checks for environment variables matching the `mapstructure` tag or field name and assigns their values to the corresponding struct fields.
 
 ### Example Usage
 
