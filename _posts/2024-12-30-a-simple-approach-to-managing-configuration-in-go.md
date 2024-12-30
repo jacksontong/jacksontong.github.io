@@ -129,3 +129,5 @@ To address these limitations, you could:
 ## Conclusion
 
 This lightweight configuration loader is a great fit for projects where simplicity and minimalism are key. By leveraging Go’s reflection capabilities, you can create a flexible and environment-driven configuration system without relying on external libraries. For larger projects, consider extending this solution or exploring established libraries if advanced features are needed.
+
+You can try out the code on the Go Playground: [https://go.dev/play/p/EhjsUVOCGPO](https://go.dev/play/p/EhjsUVOCGPO).
