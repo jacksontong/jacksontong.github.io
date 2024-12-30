@@ -14,8 +14,6 @@ Here is an example implementation for managing configuration:
 ### Step 1: Define the Config Struct
 
 ```go
-package config
-
 type Config struct {
 	AppPort       string `mapstructure:"APP_PORT"`
 	Environment   string `mapstructure:"ENVIRONMENT"`
