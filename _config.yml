@@ -36,13 +36,20 @@ remote_theme: jekyll/minima@6b9b78d
 plugins:
   - jekyll-feed
   - jekyll-remote-theme
+  - jekyll-tagging
 
+# jekyll-tagging plugin settings
+tag_page_layout: tag_page
+tag_page_dir: tags
+
+# Minima settings
 minima:
   skin: auto
   social_links:
     - { platform: github,  user_url: "https://github.com/jacksontong" }
     - { platform: linkedin,  user_url: "https://www.linkedin.com/in/jacksontong2704" }
 
+# Sass settings
 sass:
   quiet_deps: true
 
