@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>A Simple Approach to Managing Configuration in Go | BrickCrafted</title>
+<meta name="generator" content="Jekyll v4.3.4" />
+<meta property="og:title" content="A Simple Approach to Managing Configuration in Go" />
+<meta name="author" content="Jackson Tong" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Managing configuration in a Go project can be simple and highly productive, enhancing both maintainability and development speed. For small to medium-sized projects, a straightforward solution can often be more effective and easier to maintain. In this post, we’ll explore a lightweight and custom approach to handling configuration in Go using struct tags and environment variables." />
+<meta property="og:description" content="Managing configuration in a Go project can be simple and highly productive, enhancing both maintainability and development speed. For small to medium-sized projects, a straightforward solution can often be more effective and easier to maintain. In this post, we’ll explore a lightweight and custom approach to handling configuration in Go using struct tags and environment variables." />
+<link rel="canonical" href="/2024/12/30/a-simple-approach-to-managing-configuration-in-go.html" />
+<meta property="og:url" content="/2024/12/30/a-simple-approach-to-managing-configuration-in-go.html" />
+<meta property="og:site_name" content="BrickCrafted" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-12-30T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="A Simple Approach to Managing Configuration in Go" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Jackson Tong"},"dateModified":"2024-12-30T00:00:00+00:00","datePublished":"2024-12-30T00:00:00+00:00","description":"Managing configuration in a Go project can be simple and highly productive, enhancing both maintainability and development speed. For small to medium-sized projects, a straightforward solution can often be more effective and easier to maintain. In this post, we’ll explore a lightweight and custom approach to handling configuration in Go using struct tags and environment variables.","headline":"A Simple Approach to Managing Configuration in Go","mainEntityOfPage":{"@type":"WebPage","@id":"/2024/12/30/a-simple-approach-to-managing-configuration-in-go.html"},"url":"/2024/12/30/a-simple-approach-to-managing-configuration-in-go.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="BrickCrafted" /><link rel="icon" href="/assets/images/favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/images/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/images//favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/images//favicon-16x16.png">
+<link rel="manifest" href="/assets/images/site.webmanifest">
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">BrickCrafted</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/tags/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">A Simple Approach to Managing Configuration in Go</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2024-12-30T00:00:00+00:00" itemprop="datePublished">
+        Dec 30, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Managing configuration in a Go project can be simple and highly productive, enhancing both maintainability and development speed. For small to medium-sized projects, a straightforward solution can often be more effective and easier to maintain. In this post, we’ll explore a lightweight and custom approach to handling configuration in Go using struct tags and environment variables.</p>
+
+<h2 id="the-simple-approach-using-struct-tags-and-reflection">The Simple Approach: Using Struct Tags and Reflection</h2>
+
+<p>Here is an example implementation for managing configuration:</p>
+
+<h3 id="step-1-define-the-config-struct">Step 1: Define the Config Struct</h3>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">type</span> <span class="n">Config</span> <span class="k">struct</span> <span class="p">{</span>
+	<span class="n">AppPort</span>       <span class="kt">string</span> <span class="s">`mapstructure:"APP_PORT"`</span>
+	<span class="n">Environment</span>   <span class="kt">string</span> <span class="s">`mapstructure:"ENVIRONMENT"`</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">Config</code> struct serves as the blueprint for your application’s configuration. Each field represents a configuration value, annotated with a <code class="language-plaintext highlighter-rouge">mapstructure</code> tag to specify the corresponding environment variable name.</p>
+
+<ul>
+  <li><strong>Struct Tags</strong>: The <code class="language-plaintext highlighter-rouge">mapstructure</code> tag explicitly defines which environment variable maps to each field. For example, <code class="language-plaintext highlighter-rouge">APP_PORT</code> maps to <code class="language-plaintext highlighter-rouge">AppPort</code>.</li>
+  <li><strong>Fallback Mechanism</strong>: If no <code class="language-plaintext highlighter-rouge">mapstructure</code> tag is provided, the field name (converted to uppercase) is used as the default environment variable name.</li>
+</ul>
+
+<h3 id="step-2-define-the-loadconfig-function">Step 2: Define the LoadConfig Function</h3>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span> <span class="n">config</span>
+
+<span class="k">import</span> <span class="p">(</span>
+    <span class="s">"os"</span>
+    <span class="s">"reflect"</span>
+    <span class="s">"strings"</span>
+<span class="p">)</span>
+
+<span class="k">func</span> <span class="n">LoadConfig</span><span class="p">()</span> <span class="p">(</span><span class="o">*</span><span class="n">Config</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">cfg</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="n">Config</span><span class="p">{</span>
+        <span class="n">AppPort</span><span class="o">:</span>     <span class="s">"8080"</span><span class="p">,</span>
+        <span class="n">Environment</span><span class="o">:</span> <span class="s">"development"</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="n">v</span> <span class="o">:=</span> <span class="n">reflect</span><span class="o">.</span><span class="n">ValueOf</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span><span class="o">.</span><span class="n">Elem</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="o">:=</span> <span class="m">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">v</span><span class="o">.</span><span class="n">NumField</span><span class="p">();</span> <span class="n">i</span><span class="o">++</span> <span class="p">{</span>
+        <span class="n">field</span> <span class="o">:=</span> <span class="n">v</span><span class="o">.</span><span class="n">Type</span><span class="p">()</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">envVar</span> <span class="o">:=</span> <span class="n">field</span><span class="o">.</span><span class="n">Tag</span><span class="o">.</span><span class="n">Get</span><span class="p">(</span><span class="s">"mapstructure"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">envVar</span> <span class="o">==</span> <span class="s">""</span> <span class="p">{</span>
+            <span class="n">envVar</span> <span class="o">=</span> <span class="n">strings</span><span class="o">.</span><span class="n">ToUpper</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">Name</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">value</span><span class="p">,</span> <span class="n">exists</span> <span class="o">:=</span> <span class="n">os</span><span class="o">.</span><span class="n">LookupEnv</span><span class="p">(</span><span class="n">envVar</span><span class="p">);</span> <span class="n">exists</span> <span class="p">{</span>
+            <span class="n">v</span><span class="o">.</span><span class="n">Field</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">SetString</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">cfg</span><span class="p">,</span> <span class="no">nil</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">LoadConfig</code> function populates the <code class="language-plaintext highlighter-rouge">Config</code> struct with values from environment variables:</p>
+
+<ul>
+  <li><strong>Default Values</strong>: Initializes the struct with sensible defaults (e.g., <code class="language-plaintext highlighter-rouge">AppPort</code> is set to <code class="language-plaintext highlighter-rouge">8080</code> and <code class="language-plaintext highlighter-rouge">Environment</code> to <code class="language-plaintext highlighter-rouge">development</code>).</li>
+  <li><strong>Reflection</strong>: Iterates over each struct field using Go’s <code class="language-plaintext highlighter-rouge">reflect</code> package.</li>
+  <li><strong>Environment Variable Lookup</strong>: Checks for environment variables matching the <code class="language-plaintext highlighter-rouge">mapstructure</code> tag or field name and assigns their values to the corresponding struct fields.</li>
+</ul>
+
+<h3 id="example-usage">Example Usage</h3>
+
+<p>For local development, you can use this package in conjunction with <a href="https://github.com/joho/godotenv">godotenv</a> to load environment variables from a <code class="language-plaintext highlighter-rouge">.env</code> file. This approach allows you to manage environment variables in a single file without cluttering your terminal or deployment configuration.</p>
+
+<p>Create a <code class="language-plaintext highlighter-rouge">.env</code> file for local development:</p>
+
+<pre><code class="language-env">APP_PORT=3000
+ENVIRONMENT=local
+</code></pre>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span> <span class="n">main</span>
+
+<span class="k">import</span> <span class="p">(</span>
+    <span class="s">"fmt"</span>
+    <span class="s">"log"</span>
+
+    <span class="c">// auto load environment variables from .env file.</span>
+    <span class="n">_</span> <span class="s">"github.com/joho/godotenv/autoload"</span>
+    <span class="s">"your_project/config"</span>
+<span class="p">)</span>
+
+<span class="k">func</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">cfg</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">config</span><span class="o">.</span><span class="n">LoadConfig</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">Fatalf</span><span class="p">(</span><span class="s">"Failed to load configuration: %v"</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="n">fmt</span><span class="o">.</span><span class="n">Printf</span><span class="p">(</span><span class="s">"App is running on port: %s in %s environment</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">AppPort</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">Environment</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="advantages-of-this-approach">Advantages of This Approach</h3>
+
+<ul>
+  <li><strong>Simplicity</strong>: No external dependencies or libraries are required.</li>
+  <li><strong>Environment-Driven</strong>: Reads directly from environment variables, which is ideal for containerized and cloud-based applications.</li>
+  <li><strong>Customizable</strong>: Supports flexible mapping using struct tags or defaulting to field names.</li>
+</ul>
+
+<h3 id="setting-environment-variables">Setting Environment Variables</h3>
+
+<p>To run your application with this configuration loader, set the required environment variables. For example:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">APP_PORT</span><span class="o">=</span>3000
+<span class="nb">export </span><span class="nv">ENVIRONMENT</span><span class="o">=</span>production
+</code></pre></div></div>
+
+<h3 id="limitations">Limitations</h3>
+
+<p>While this approach is simple and effective, it does have some limitations:</p>
+
+<ul>
+  <li><strong>Basic Type Support</strong>: This implementation works well for string values but would need extension for other types like integers or booleans.</li>
+  <li><strong>No Validation</strong>: It assumes that the environment variables are correctly set without validating them.</li>
+</ul>
+
+<h3 id="extending-the-solution">Extending the Solution</h3>
+
+<p>To address these limitations, you could:</p>
+
+<ul>
+  <li>Add support for type conversion for fields requiring non-string values.</li>
+  <li>Include validation logic to ensure required fields are populated correctly.</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>This lightweight configuration loader is a great fit for projects where simplicity and minimalism are key. By leveraging Go’s reflection capabilities, you can create a flexible and environment-driven configuration system without relying on external libraries. For larger projects, consider extending this solution or exploring established libraries if advanced features are needed.</p>
+
+<p>You can try out the code on the Go Playground: <a href="https://go.dev/play/p/EhjsUVOCGPO">https://go.dev/play/p/EhjsUVOCGPO</a>.</p>
+
+  </div>
+
+  
+    <p class="post-tags">
+      <strong>Tags:</strong>
+      
+        <a href="/tags/go">go</a>, 
+      
+        <a href="/tags/config">config</a>
+      
+    </p>
+  
+
+  <!-- giscus comment plugin -->
+  <script src="https://giscus.app/client.js"
+    data-repo="jacksontong/jacksontong.github.io"
+    data-repo-id="R_kgDONja3sA"
+    data-category="General"
+    data-category-id="DIC_kwDONja3sM4Cll3Y"
+    data-mapping="pathname"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="preferred_color_scheme"
+    data-lang="en"
+    crossorigin="anonymous"
+    async>
+  </script><a class="u-url" href="/2024/12/30/a-simple-approach-to-managing-configuration-in-go.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Jackson Tong</li>
+          <li><a class="u-email" href="mailto:tongtoan2704@gmail.com">tongtoan2704@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>Welcome to BrickCrafted, my personal blog where I share my experiences, insights, and tips about coding and software architecture.</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li>
+  <a rel="me" href="https://github.com/jacksontong" target="_blank" title="github">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#github"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://www.linkedin.com/in/jacksontong2704" target="_blank" title="linkedin">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#linkedin"></use>
+    </svg>
+  </a>
+</li>
+</ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

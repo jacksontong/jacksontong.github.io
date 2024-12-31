@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Building a Simple Inversion of Control Container in Go | BrickCrafted</title>
+<meta name="generator" content="Jekyll v4.3.4" />
+<meta property="og:title" content="Building a Simple Inversion of Control Container in Go" />
+<meta name="author" content="Jackson Tong" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Inversion of Control (IoC) is a design principle that plays a key role in modern software architecture. IoC containers help manage dependencies by decoupling object creation from object usage, resulting in cleaner, more modular, and testable code." />
+<meta property="og:description" content="Inversion of Control (IoC) is a design principle that plays a key role in modern software architecture. IoC containers help manage dependencies by decoupling object creation from object usage, resulting in cleaner, more modular, and testable code." />
+<link rel="canonical" href="/2024/12/29/building-a-simple-inversion-of-control-container-in-go.html" />
+<meta property="og:url" content="/2024/12/29/building-a-simple-inversion-of-control-container-in-go.html" />
+<meta property="og:site_name" content="BrickCrafted" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-12-29T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Building a Simple Inversion of Control Container in Go" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Jackson Tong"},"dateModified":"2024-12-29T00:00:00+00:00","datePublished":"2024-12-29T00:00:00+00:00","description":"Inversion of Control (IoC) is a design principle that plays a key role in modern software architecture. IoC containers help manage dependencies by decoupling object creation from object usage, resulting in cleaner, more modular, and testable code.","headline":"Building a Simple Inversion of Control Container in Go","mainEntityOfPage":{"@type":"WebPage","@id":"/2024/12/29/building-a-simple-inversion-of-control-container-in-go.html"},"url":"/2024/12/29/building-a-simple-inversion-of-control-container-in-go.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="BrickCrafted" /><link rel="icon" href="/assets/images/favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/images/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/images//favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/images//favicon-16x16.png">
+<link rel="manifest" href="/assets/images/site.webmanifest">
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">BrickCrafted</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/tags/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Building a Simple Inversion of Control Container in Go</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2024-12-29T00:00:00+00:00" itemprop="datePublished">
+        Dec 29, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Inversion of Control (IoC) is a design principle that plays a key role in modern software architecture. IoC containers help manage dependencies by decoupling object creation from object usage, resulting in cleaner, more modular, and testable code.</p>
+
+<p>While Go provides excellent support for dependency injection through libraries like <a href="https://github.com/uber-go/dig">Dig</a>, <a href="https://github.com/google/wire">Wire</a>, and <a href="https://github.com/uber-go/fx">Fx</a>, these libraries can be complex and require a steep learning curve. For simpler use cases, a lightweight IoC container might be a better fit.</p>
+
+<p>This post demonstrates how to create a straightforward IoC container in Go. The implementation is designed to be thread-safe, easy to use, and minimalistic.</p>
+
+<h2 id="implementing-the-ioc-container">Implementing the IoC Container</h2>
+
+<h3 id="step-1-define-the-container-type-and-container-variable">Step 1: Define the Container Type and Container Variable</h3>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span> <span class="n">ioc</span>
+
+<span class="k">import</span> <span class="p">(</span>
+	<span class="s">"fmt"</span>
+	<span class="s">"sync"</span>
+<span class="p">)</span>
+
+<span class="k">type</span> <span class="n">container</span> <span class="k">struct</span> <span class="p">{</span>
+	<span class="n">services</span> <span class="k">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="k">interface</span><span class="p">{}</span>
+	<span class="n">mu</span>       <span class="n">sync</span><span class="o">.</span><span class="n">RWMutex</span>
+<span class="p">}</span>
+
+<span class="k">var</span> <span class="n">globalContainer</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">container</span><span class="p">{</span>
+	<span class="n">services</span><span class="o">:</span> <span class="nb">make</span><span class="p">(</span><span class="k">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="k">interface</span><span class="p">{}),</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">container</code> struct stores registered services in a map and ensures thread-safe access using a read-write mutex. The <code class="language-plaintext highlighter-rouge">globalContainer</code> variable is a singleton instance of the <code class="language-plaintext highlighter-rouge">container</code> struct.</p>
+
+<h3 id="step-2-define-the-register-function">Step 2: Define the Register Function</h3>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span> <span class="n">Register</span><span class="p">(</span><span class="n">name</span> <span class="kt">string</span><span class="p">,</span> <span class="n">service</span> <span class="k">interface</span><span class="p">{})</span> <span class="p">{</span>
+	<span class="n">globalContainer</span><span class="o">.</span><span class="n">mu</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+	<span class="k">defer</span> <span class="n">globalContainer</span><span class="o">.</span><span class="n">mu</span><span class="o">.</span><span class="n">Unlock</span><span class="p">()</span>
+	<span class="n">globalContainer</span><span class="o">.</span><span class="n">services</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">service</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">Register</code> function associates a name with a service and locks the container for writing to ensure thread safety.</p>
+
+<h3 id="step-3-define-the-resolve-function">Step 3: Define the Resolve Function</h3>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span> <span class="n">Resolve</span><span class="p">[</span><span class="n">T</span> <span class="n">any</span><span class="p">](</span><span class="n">name</span> <span class="kt">string</span><span class="p">)</span> <span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">globalContainer</span><span class="o">.</span><span class="n">mu</span><span class="o">.</span><span class="n">RLock</span><span class="p">()</span>
+	<span class="k">defer</span> <span class="n">globalContainer</span><span class="o">.</span><span class="n">mu</span><span class="o">.</span><span class="n">RUnlock</span><span class="p">()</span>
+
+	<span class="n">service</span><span class="p">,</span> <span class="n">exists</span> <span class="o">:=</span> <span class="n">globalContainer</span><span class="o">.</span><span class="n">services</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+	<span class="k">if</span> <span class="o">!</span><span class="n">exists</span> <span class="p">{</span>
+		<span class="k">var</span> <span class="n">zero</span> <span class="n">T</span>
+		<span class="k">return</span> <span class="n">zero</span><span class="p">,</span> <span class="n">fmt</span><span class="o">.</span><span class="n">Errorf</span><span class="p">(</span><span class="s">"service not found: %s"</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+	<span class="p">}</span>
+
+	<span class="n">result</span><span class="p">,</span> <span class="n">ok</span> <span class="o">:=</span> <span class="n">service</span><span class="o">.</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+	<span class="k">if</span> <span class="o">!</span><span class="n">ok</span> <span class="p">{</span>
+		<span class="k">var</span> <span class="n">zero</span> <span class="n">T</span>
+		<span class="k">return</span> <span class="n">zero</span><span class="p">,</span> <span class="n">fmt</span><span class="o">.</span><span class="n">Errorf</span><span class="p">(</span><span class="s">"service type mismatch: expected %T"</span><span class="p">,</span> <span class="n">zero</span><span class="p">)</span>
+	<span class="p">}</span>
+
+	<span class="k">return</span> <span class="n">result</span><span class="p">,</span> <span class="no">nil</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">Resolve</code> function retrieves a registered service by name and casts it to the specified type. It locks the container for reading, ensuring that concurrent reads are safe.</p>
+
+<h2 id="using-the-ioc-container">Using the IoC Container</h2>
+
+<p>Here is an example of how to use the IoC container to register and resolve a service:</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span> <span class="n">main</span>
+
+<span class="k">import</span> <span class="p">(</span>
+	<span class="s">"fmt"</span>
+	<span class="s">"ioc"</span>
+<span class="p">)</span>
+
+<span class="k">const</span> <span class="n">myServiceName</span> <span class="o">=</span> <span class="s">"myService"</span>
+
+<span class="k">type</span> <span class="n">MyService</span> <span class="k">struct</span> <span class="p">{</span>
+	<span class="n">Name</span> <span class="kt">string</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="c">// Register a service</span>
+	<span class="n">ioc</span><span class="o">.</span><span class="n">Register</span><span class="p">(</span><span class="n">myServiceName</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">MyService</span><span class="p">{</span><span class="n">Name</span><span class="o">:</span> <span class="s">"Test Service"</span><span class="p">})</span>
+
+	<span class="c">// Resolve the service</span>
+	<span class="n">service</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">ioc</span><span class="o">.</span><span class="n">Resolve</span><span class="p">[</span><span class="o">*</span><span class="n">MyService</span><span class="p">](</span><span class="n">myServiceName</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"Error:"</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+		<span class="k">return</span>
+	<span class="p">}</span>
+
+	<span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"Service Name:"</span><span class="p">,</span> <span class="n">service</span><span class="o">.</span><span class="n">Name</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>This example registers a service with the container and then resolves it by name, demonstrating both the flexibility and simplicity of the implementation.</p>
+
+<h2 id="enhancements-and-extensions">Enhancements and Extensions</h2>
+
+<p>This basic IoC container can serve as a foundation for more advanced features, such as:</p>
+
+<ul>
+  <li><strong>Lifecycle Management</strong>: Adding support for transient, singleton, or scoped lifecycles.</li>
+  <li><strong>Dependency Graph Resolution</strong>: Automatically resolving dependencies for complex services.</li>
+  <li><strong>Configuration Support</strong>: Integrating with configuration files or environment variables for dynamic service registration.</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Building a simple IoC container in Go is a great exercise to understand dependency injection and its benefits. While lightweight implementations like this are sufficient for many use cases, consider established libraries for larger or more complex projects.</p>
+
+<p>For a deeper understanding of IoC and dependency injection, check out <a href="https://martinfowler.com/articles/injection.html">Martin Fowler’s article</a>.</p>
+
+<p>You can explore the full source code here:</p>
+
+<ol>
+  <li><a href="https://gist.github.com/jacksontong/b05f00458416cb830ad6820a9cfc59f4">Gist: Simple IoC Container</a></li>
+  <li><a href="https://go.dev/play/p/jgDjMHZNQBf">Go Playground Example</a></li>
+</ol>
+
+<p>I hope this guide helps you in your Go projects. If you have questions or suggestions, feel free to share them in the comments!</p>
+
+  </div>
+
+  
+    <p class="post-tags">
+      <strong>Tags:</strong>
+      
+        <a href="/tags/go">go</a>, 
+      
+        <a href="/tags/ioc">ioc</a>
+      
+    </p>
+  
+
+  <!-- giscus comment plugin -->
+  <script src="https://giscus.app/client.js"
+    data-repo="jacksontong/jacksontong.github.io"
+    data-repo-id="R_kgDONja3sA"
+    data-category="General"
+    data-category-id="DIC_kwDONja3sM4Cll3Y"
+    data-mapping="pathname"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="preferred_color_scheme"
+    data-lang="en"
+    crossorigin="anonymous"
+    async>
+  </script><a class="u-url" href="/2024/12/29/building-a-simple-inversion-of-control-container-in-go.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Jackson Tong</li>
+          <li><a class="u-email" href="mailto:tongtoan2704@gmail.com">tongtoan2704@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>Welcome to BrickCrafted, my personal blog where I share my experiences, insights, and tips about coding and software architecture.</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li>
+  <a rel="me" href="https://github.com/jacksontong" target="_blank" title="github">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#github"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://www.linkedin.com/in/jacksontong2704" target="_blank" title="linkedin">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#linkedin"></use>
+    </svg>
+  </a>
+</li>
+</ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

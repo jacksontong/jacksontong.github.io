@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Setting Up a VSCode Devcontainer Using Docker Compose | BrickCrafted</title>
+<meta name="generator" content="Jekyll v4.3.4" />
+<meta property="og:title" content="Setting Up a VSCode Devcontainer Using Docker Compose" />
+<meta name="author" content="Jackson Tong" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Setting up a development environment can sometimes be challenging, especially when multiple services are involved. Fortunately, with Docker Compose and VSCode Devcontainers, you can create a streamlined setup that includes all necessary dependencies and services for your project." />
+<meta property="og:description" content="Setting up a development environment can sometimes be challenging, especially when multiple services are involved. Fortunately, with Docker Compose and VSCode Devcontainers, you can create a streamlined setup that includes all necessary dependencies and services for your project." />
+<link rel="canonical" href="/2024/12/31/setting-up-a-vscode-devcontainer-using-docker-compose.html" />
+<meta property="og:url" content="/2024/12/31/setting-up-a-vscode-devcontainer-using-docker-compose.html" />
+<meta property="og:site_name" content="BrickCrafted" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-12-31T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Setting Up a VSCode Devcontainer Using Docker Compose" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Jackson Tong"},"dateModified":"2024-12-31T00:00:00+00:00","datePublished":"2024-12-31T00:00:00+00:00","description":"Setting up a development environment can sometimes be challenging, especially when multiple services are involved. Fortunately, with Docker Compose and VSCode Devcontainers, you can create a streamlined setup that includes all necessary dependencies and services for your project.","headline":"Setting Up a VSCode Devcontainer Using Docker Compose","mainEntityOfPage":{"@type":"WebPage","@id":"/2024/12/31/setting-up-a-vscode-devcontainer-using-docker-compose.html"},"url":"/2024/12/31/setting-up-a-vscode-devcontainer-using-docker-compose.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="BrickCrafted" /><link rel="icon" href="/assets/images/favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/images/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/images//favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/images//favicon-16x16.png">
+<link rel="manifest" href="/assets/images/site.webmanifest">
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">BrickCrafted</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/tags/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Setting Up a VSCode Devcontainer Using Docker Compose</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2024-12-31T00:00:00+00:00" itemprop="datePublished">
+        Dec 31, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Setting up a development environment can sometimes be challenging, especially when multiple services are involved. Fortunately, with Docker Compose and VSCode Devcontainers, you can create a streamlined setup that includes all necessary dependencies and services for your project.</p>
+
+<p>This tutorial will guide you through setting up a VSCode Devcontainer for a Go project using Docker Compose. With this setup, you can run multiple services like PostgreSQL and pgAdmin alongside your application.</p>
+
+<h2 id="step-1-create-a-env-file">Step 1: Create a <code class="language-plaintext highlighter-rouge">.env</code> File</h2>
+
+<p>First, create a <code class="language-plaintext highlighter-rouge">.env</code> file to store your database credentials and other environment-specific configurations:</p>
+
+<pre><code class="language-env">DB_USER=dev
+DB_PASSWORD=secret
+DB_NAME=dev_db
+DB_HOST=db
+
+PGADMIN_DEFAULT_EMAIL=anonymous@example.com
+PGADMIN_DEFAULT_PASSWORD=secret
+</code></pre>
+
+<p>This file centralizes environment variables, making them easier to manage and preventing hardcoding sensitive information into your codebase.</p>
+
+<h2 id="step-2-create-a-docker-composeyaml-file">Step 2: Create a <code class="language-plaintext highlighter-rouge">docker-compose.yaml</code> File</h2>
+
+<p>Next, define your services in a <code class="language-plaintext highlighter-rouge">docker-compose.yaml</code> file. Here is an example configuration:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">services</span><span class="pi">:</span>
+  <span class="na">app</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">mcr.microsoft.com/vscode/devcontainers/go:1.23-bookworm</span>
+    <span class="na">ports</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s2">"</span><span class="s">${APP_PORT:-8080}:8080"</span>
+    <span class="na">volumes</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">.:/workspace:cached</span>
+    <span class="na">command</span><span class="pi">:</span> <span class="s">sleep infinity</span>
+  <span class="na">db</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">postgres:17</span>
+    <span class="na">volumes</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">db-data:/var/lib/postgresql/data</span>
+    <span class="na">environment</span><span class="pi">:</span>
+      <span class="na">POSTGRES_USER</span><span class="pi">:</span> <span class="s">${DB_USER}</span>
+      <span class="na">POSTGRES_PASSWORD</span><span class="pi">:</span> <span class="s">${DB_PASSWORD}</span>
+      <span class="na">POSTGRES_DB</span><span class="pi">:</span> <span class="s">${DB_NAME}</span>
+  <span class="na">pgadmin</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">dpage/pgadmin4</span>
+    <span class="na">ports</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s2">"</span><span class="s">${PGADMIN_PORT:-5050}:80"</span>
+    <span class="na">environment</span><span class="pi">:</span>
+      <span class="na">PGADMIN_DEFAULT_EMAIL</span><span class="pi">:</span> <span class="s">${PGADMIN_DEFAULT_EMAIL}</span>
+      <span class="na">PGADMIN_DEFAULT_PASSWORD</span><span class="pi">:</span> <span class="s">${PGADMIN_DEFAULT_PASSWORD}</span>
+
+<span class="na">volumes</span><span class="pi">:</span>
+  <span class="na">db-data</span><span class="pi">:</span>
+</code></pre></div></div>
+
+<h3 id="explanation">Explanation:</h3>
+<ul>
+  <li><strong>app</strong>: The Go development container. You can use any Go image here; this example uses the Microsoft-based image because it comes pre-packaged with tools and configurations that work well in a Devcontainer environment. The <code class="language-plaintext highlighter-rouge">command: sleep infinity</code> ensures the container stays alive while developing.</li>
+  <li><strong>db</strong>: A PostgreSQL service with a mounted volume for persistent storage.</li>
+  <li><strong>pgadmin</strong>: A pgAdmin service for managing your PostgreSQL database via a web interface.</li>
+  <li><strong>volumes</strong>: Shared volume for the database to persist data.</li>
+</ul>
+
+<h2 id="step-3-create-a-devcontainerjson-file">Step 3: Create a <code class="language-plaintext highlighter-rouge">devcontainer.json</code> File</h2>
+
+<p>Configure the Devcontainer settings by creating a <code class="language-plaintext highlighter-rouge">.devcontainer/devcontainer.json</code> file:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Go Development Container"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"dockerComposeFile"</span><span class="p">:</span><span class="w"> </span><span class="s2">"../docker-compose.yaml"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"service"</span><span class="p">:</span><span class="w"> </span><span class="s2">"app"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"workspaceFolder"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/workspace"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"customizations"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"vscode"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"extensions"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"golang.Go"</span><span class="p">,</span><span class="w"> </span><span class="s2">"EditorConfig.EditorConfig"</span><span class="p">],</span><span class="w">
+      </span><span class="nl">"settings"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"terminal.integrated.defaultProfile.linux"</span><span class="p">:</span><span class="w"> </span><span class="s2">"zsh"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"terminal.integrated.profiles.linux"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"zsh"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nl">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/bin/zsh"</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"remoteUser"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vscode"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"shutdownAction"</span><span class="p">:</span><span class="w"> </span><span class="s2">"stopCompose"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<h3 id="key-configuration">Key Configuration:</h3>
+<ul>
+  <li><strong>dockerComposeFile</strong>: Links to your <code class="language-plaintext highlighter-rouge">docker-compose.yaml</code> file.</li>
+  <li><strong>service</strong>: Specifies the primary container (the Go development container).</li>
+  <li><strong>workspaceFolder</strong>: Sets the folder inside the container to map your project files.</li>
+  <li><strong>customizations</strong>: Installs VSCode extensions for Go development and configures the terminal to use Zsh.</li>
+  <li><strong>remoteUser</strong>: Ensures all operations inside the container run as the <code class="language-plaintext highlighter-rouge">vscode</code> user.</li>
+</ul>
+
+<h2 id="step-4-create-a-go-application-to-test-database-connection">Step 4: Create a Go Application to Test Database Connection</h2>
+
+<p>To ensure your setup works, create a <code class="language-plaintext highlighter-rouge">main.go</code> file that tests the connection to the PostgreSQL database:</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span> <span class="n">main</span>
+
+<span class="k">import</span> <span class="p">(</span>
+	<span class="s">"database/sql"</span>
+	<span class="s">"fmt"</span>
+	<span class="s">"log"</span>
+	<span class="s">"os"</span>
+
+	<span class="n">_</span> <span class="s">"github.com/joho/godotenv/autoload"</span>
+	<span class="n">_</span> <span class="s">"github.com/lib/pq"</span>
+<span class="p">)</span>
+
+<span class="k">func</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="n">dbUser</span> <span class="o">:=</span> <span class="n">os</span><span class="o">.</span><span class="n">Getenv</span><span class="p">(</span><span class="s">"DB_USER"</span><span class="p">)</span>
+	<span class="n">dbName</span> <span class="o">:=</span> <span class="n">os</span><span class="o">.</span><span class="n">Getenv</span><span class="p">(</span><span class="s">"DB_NAME"</span><span class="p">)</span>
+	<span class="n">dbPass</span> <span class="o">:=</span> <span class="n">os</span><span class="o">.</span><span class="n">Getenv</span><span class="p">(</span><span class="s">"DB_PASSWORD"</span><span class="p">)</span>
+	<span class="n">dbHost</span> <span class="o">:=</span> <span class="n">os</span><span class="o">.</span><span class="n">Getenv</span><span class="p">(</span><span class="s">"DB_HOST"</span><span class="p">)</span>
+
+	<span class="n">connStr</span> <span class="o">:=</span> <span class="n">fmt</span><span class="o">.</span><span class="n">Sprintf</span><span class="p">(</span>
+		<span class="s">"host=%s user=%s password=%s dbname=%s sslmode=disable"</span><span class="p">,</span>
+		<span class="n">dbHost</span><span class="p">,</span> <span class="n">dbUser</span><span class="p">,</span> <span class="n">dbPass</span><span class="p">,</span> <span class="n">dbName</span><span class="p">,</span>
+	<span class="p">)</span>
+
+	<span class="c">// Open a connection to the database</span>
+	<span class="n">db</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">sql</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="s">"postgres"</span><span class="p">,</span> <span class="n">connStr</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">log</span><span class="o">.</span><span class="n">Fatalf</span><span class="p">(</span><span class="s">"Failed to open database: %v"</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+	<span class="p">}</span>
+	<span class="k">defer</span> <span class="n">db</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
+
+	<span class="c">// Ping the database to verify the connection</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">db</span><span class="o">.</span><span class="n">Ping</span><span class="p">();</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">log</span><span class="o">.</span><span class="n">Fatalf</span><span class="p">(</span><span class="s">"Failed to ping database: %v"</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+	<span class="p">}</span>
+
+	<span class="n">fmt</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"Successfully connected to the database!"</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="key-points">Key Points:</h3>
+<ul>
+  <li>This code uses environment variables to configure the database connection.</li>
+  <li>It connects to the PostgreSQL database and verifies the connection using <code class="language-plaintext highlighter-rouge">db.Ping()</code>.</li>
+</ul>
+
+<h2 id="step-5-open-project-in-vscode-devcontainer">Step 5: Open Project in VSCode Devcontainer</h2>
+
+<p>Open the project in VSCode Devcontainer. Once the container is running, execute the following command to test the database connection:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>go run main.go
+</code></pre></div></div>
+
+<p>You should see the output:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Successfully connected to the database!
+</code></pre></div></div>
+
+<h2 id="accessing-pgadmin">Accessing pgAdmin</h2>
+
+<p>After starting the containers, you can access pgAdmin at <a href="http://localhost:5050">http://localhost:5050</a>. Use the credentials you specified in the environment variables to log in.</p>
+
+<h2 id="source-code-and-documentation">Source Code and Documentation</h2>
+
+<ul>
+  <li><strong>Source Code</strong>: The complete setup can be found on <a href="https://github.com/jacksontong/devcontainer-compose">GitHub</a>.</li>
+  <li><strong>VSCode Devcontainer Documentation</strong>: For more information on configuring Devcontainers, visit the <a href="https://code.visualstudio.com/docs/devcontainers/containers">official VSCode documentation</a>.</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Using Docker Compose with VSCode Devcontainers provides a powerful and efficient way to manage a development environment with multiple services. This tutorial showed how to set up a Go project with PostgreSQL and pgAdmin, enabling seamless integration and testing. Feel free to expand this setup with additional services as needed for your projects!</p>
+
+  </div>
+
+  
+    <p class="post-tags">
+      <strong>Tags:</strong>
+      
+        <a href="/tags/go">go</a>, 
+      
+        <a href="/tags/docker">docker</a>, 
+      
+        <a href="/tags/postgres">postgres</a>
+      
+    </p>
+  
+
+  <!-- giscus comment plugin -->
+  <script src="https://giscus.app/client.js"
+    data-repo="jacksontong/jacksontong.github.io"
+    data-repo-id="R_kgDONja3sA"
+    data-category="General"
+    data-category-id="DIC_kwDONja3sM4Cll3Y"
+    data-mapping="pathname"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="preferred_color_scheme"
+    data-lang="en"
+    crossorigin="anonymous"
+    async>
+  </script><a class="u-url" href="/2024/12/31/setting-up-a-vscode-devcontainer-using-docker-compose.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Jackson Tong</li>
+          <li><a class="u-email" href="mailto:tongtoan2704@gmail.com">tongtoan2704@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>Welcome to BrickCrafted, my personal blog where I share my experiences, insights, and tips about coding and software architecture.</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li>
+  <a rel="me" href="https://github.com/jacksontong" target="_blank" title="github">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#github"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://www.linkedin.com/in/jacksontong2704" target="_blank" title="linkedin">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#linkedin"></use>
+    </svg>
+  </a>
+</li>
+</ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
