@@ -1,4 +1,148 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.4">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2024-12-31T05:28:08+00:00</updated><id>/feed.xml</id><title type="html">BrickCrafted</title><subtitle>Welcome to BrickCrafted, my personal blog where I share my experiences, insights, and tips about coding and software architecture.</subtitle><author><name>Jackson Tong</name><email>tongtoan2704@gmail.com</email></author><entry><title type="html">Setting Up a VSCode Devcontainer Using Docker Compose</title><link href="/2024/12/31/setting-up-a-vscode-devcontainer-using-docker-compose.html" rel="alternate" type="text/html" title="Setting Up a VSCode Devcontainer Using Docker Compose" /><published>2024-12-31T00:00:00+00:00</published><updated>2024-12-31T00:00:00+00:00</updated><id>/2024/12/31/setting-up-a-vscode-devcontainer-using-docker-compose</id><content type="html" xml:base="/2024/12/31/setting-up-a-vscode-devcontainer-using-docker-compose.html"><![CDATA[<p>Setting up a development environment can sometimes be challenging, especially when multiple services are involved. Fortunately, with Docker Compose and VSCode Devcontainers, you can create a streamlined setup that includes all necessary dependencies and services for your project.</p>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.4">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2025-01-11T11:10:05+00:00</updated><id>/feed.xml</id><title type="html">BrickCrafted</title><subtitle>Welcome to BrickCrafted, my personal blog where I share my experiences, insights, and tips about coding and software architecture.</subtitle><author><name>Jackson Tong</name><email>tongtoan2704@gmail.com</email></author><entry><title type="html">Using gomock to mock Interfaces in Go</title><link href="/2025/01/11/using-gomock-to-mock-interfaces-in-go.html" rel="alternate" type="text/html" title="Using gomock to mock Interfaces in Go" /><published>2025-01-11T00:00:00+00:00</published><updated>2025-01-11T00:00:00+00:00</updated><id>/2025/01/11/using-gomock-to-mock-interfaces-in-go</id><content type="html" xml:base="/2025/01/11/using-gomock-to-mock-interfaces-in-go.html"><![CDATA[<p>Unit testing is a critical aspect of software development, ensuring that your code behaves as expected. However, testing code that interacts with external systems, such as databases or APIs, can be challenging. Mocking comes to the rescue by simulating external dependencies, allowing you to test your code in isolation.</p>
+
+<p>In this post, we’ll explore the concept of mocking and demonstrate how to use gomock to create mock implementations of interfaces in Go. By the end, you’ll understand how to effectively test code that depends on external systems.</p>
+
+<h2 id="what-is-mocking">What is Mocking?</h2>
+
+<p><strong>Mocks</strong> are simulated objects that mimic the behavior of real objects. In the context of unit tests, mocks are used to:</p>
+<ul>
+  <li>Replace external dependencies.</li>
+  <li>Control the behavior of external interactions.</li>
+  <li>Verify that the correct methods are called with expected arguments.</li>
+</ul>
+
+<p>Mocking is essential for isolating the unit of code being tested, enabling precise and reliable tests.</p>
+
+<h2 id="why-use-mocking-in-unit-tests">Why Use Mocking in Unit Tests?</h2>
+
+<p>Interacting with real databases or APIs during unit tests can lead to issues such as:</p>
+<ul>
+  <li><strong>Inconsistencies</strong>: The external system might change over time.</li>
+  <li><strong>Slow Tests</strong>: External interactions can introduce latency.</li>
+  <li><strong>Complex Setup</strong>: Configuring and maintaining real systems for testing can be cumbersome.</li>
+</ul>
+
+<p>To address these issues, we define interfaces representing external dependencies and create mock implementations of those interfaces for our tests.</p>
+
+<h2 id="introducing-gomock">Introducing gomock</h2>
+
+<p><a href="https://github.com/uber-go/mock">gomock</a> is a powerful library for generating and using mocks in Go. It integrates seamlessly with your testing framework, providing a simple way to create and verify mocks.</p>
+
+<p>Let’s walk through an example of using gomock to mock an interface.</p>
+
+<h2 id="step-1-define-the-interface">Step 1: Define the Interface</h2>
+
+<p>Create the <code class="language-plaintext highlighter-rouge">PostRepository</code> interface in <code class="language-plaintext highlighter-rouge">internal/repositories/post_repository.go</code>:</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span> <span class="n">repositories</span>
+
+<span class="k">type</span> <span class="n">PostRepository</span> <span class="k">interface</span> <span class="p">{</span>
+  <span class="n">Create</span><span class="p">(</span><span class="n">ctx</span> <span class="n">context</span><span class="o">.</span><span class="n">Context</span><span class="p">,</span> <span class="n">post</span> <span class="o">*</span><span class="n">Post</span><span class="p">)</span> <span class="p">(</span><span class="n">id</span> <span class="kt">int</span><span class="p">,</span> <span class="n">err</span> <span class="kt">error</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>This interface will be used by the <code class="language-plaintext highlighter-rouge">PostService</code> to create new posts.</p>
+
+<h2 id="step-2-create-the-service">Step 2: Create the Service</h2>
+
+<p>Define the <code class="language-plaintext highlighter-rouge">PostService</code> in <code class="language-plaintext highlighter-rouge">internal/services/post_service.go</code>. This service uses the <code class="language-plaintext highlighter-rouge">PostRepository</code> interface to perform its operations:</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span> <span class="n">services</span>
+
+<span class="k">type</span> <span class="n">PostService</span> <span class="k">struct</span> <span class="p">{</span>
+  <span class="n">r</span> <span class="n">PostRepository</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">NewPostService</span><span class="p">(</span><span class="n">r</span> <span class="n">PostRepository</span><span class="p">)</span> <span class="n">PostService</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="n">PostService</span><span class="p">{</span><span class="n">r</span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="p">(</span><span class="n">s</span> <span class="n">PostService</span><span class="p">)</span> <span class="n">Create</span><span class="p">(</span><span class="n">ctx</span> <span class="n">context</span><span class="o">.</span><span class="n">Context</span><span class="p">,</span> <span class="n">post</span> <span class="o">*</span><span class="n">Post</span><span class="p">)</span> <span class="p">(</span><span class="n">id</span> <span class="kt">int</span><span class="p">,</span> <span class="n">err</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">r</span><span class="o">.</span><span class="n">Create</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">post</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>By depending on the <code class="language-plaintext highlighter-rouge">PostRepository</code> interface, <code class="language-plaintext highlighter-rouge">PostService</code> can work with any implementation, including mocks.</p>
+
+<h2 id="step-3-install-gomock-and-mockgen">Step 3: Install gomock and mockgen</h2>
+
+<p>Install the required tools for generating and using mocks:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>go <span class="nb">install </span>go.uber.org/mock/mockgen@latest
+go get go.uber.org/mock
+</code></pre></div></div>
+
+<h2 id="step-4-generate-mock-code">Step 4: Generate Mock Code</h2>
+
+<p>Generate a mock implementation of the <code class="language-plaintext highlighter-rouge">PostRepository</code> interface in <code class="language-plaintext highlighter-rouge">internal/mocks/post_repository.go</code>:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mockgen <span class="nt">-source</span><span class="o">=</span>internal/repositories/post_repository.go <span class="se">\</span>
+    <span class="nt">-destination</span><span class="o">=</span>internal/mocks/post_repository.go <span class="se">\</span>
+    <span class="nt">-package</span><span class="o">=</span>mocks
+</code></pre></div></div>
+
+<p>This command generates a mock file that implements the <code class="language-plaintext highlighter-rouge">PostRepository</code> interface.</p>
+
+<h2 id="step-5-write-unit-tests">Step 5: Write Unit Tests</h2>
+
+<p>Create a test file <code class="language-plaintext highlighter-rouge">internal/services/post_service_test.go</code> and write tests for the <code class="language-plaintext highlighter-rouge">PostService</code> using the generated mock:</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">package</span> <span class="n">services</span>
+
+<span class="k">import</span> <span class="p">(</span>
+  <span class="s">"context"</span>
+  <span class="s">"testing"</span>
+
+  <span class="s">"your-module/internal/repositories/mocks"</span>
+  <span class="s">"github.com/stretchr/testify/assert"</span>
+  <span class="s">"go.uber.org/mock/gomock"</span>
+<span class="p">)</span>
+
+<span class="k">func</span> <span class="n">TestPostService_Create</span><span class="p">(</span><span class="n">t</span> <span class="o">*</span><span class="n">testing</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">ctrl</span> <span class="o">:=</span> <span class="n">gomock</span><span class="o">.</span><span class="n">NewController</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+  <span class="k">defer</span> <span class="n">ctrl</span><span class="o">.</span><span class="n">Finish</span><span class="p">()</span>
+
+  <span class="n">repo</span> <span class="o">:=</span> <span class="n">mocks</span><span class="o">.</span><span class="n">NewMockPostRepository</span><span class="p">(</span><span class="n">ctrl</span><span class="p">)</span>
+
+  <span class="n">ctx</span> <span class="o">:=</span> <span class="n">context</span><span class="o">.</span><span class="n">Background</span><span class="p">()</span>
+  <span class="n">post</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="n">repositories</span><span class="o">.</span><span class="n">Post</span><span class="p">{</span><span class="n">Title</span><span class="o">:</span> <span class="s">"Test Post"</span><span class="p">,</span> <span class="n">Content</span><span class="o">:</span> <span class="s">"This is a test post."</span><span class="p">}</span>
+  <span class="n">repo</span><span class="o">.</span><span class="n">EXPECT</span><span class="p">()</span><span class="o">.</span><span class="n">Create</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">post</span><span class="p">)</span><span class="o">.</span><span class="n">Return</span><span class="p">(</span><span class="m">1</span><span class="p">,</span> <span class="no">nil</span><span class="p">)</span>
+
+  <span class="n">service</span> <span class="o">:=</span> <span class="n">NewPostService</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+  <span class="n">id</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">service</span><span class="o">.</span><span class="n">Create</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">post</span><span class="p">)</span>
+
+  <span class="n">assert</span><span class="o">.</span><span class="n">NoError</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+  <span class="n">assert</span><span class="o">.</span><span class="n">Equal</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="m">1</span><span class="p">,</span> <span class="n">id</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="explanation">Explanation:</h3>
+<ul>
+  <li><strong><code class="language-plaintext highlighter-rouge">gomock.NewController</code></strong>: Initializes a mock controller to manage mock expectations.</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">repo.EXPECT()</code></strong>: Specifies the expected behavior of the mock, including method calls and return values.</li>
+  <li><strong>Assertions</strong>: Verify that the <code class="language-plaintext highlighter-rouge">PostService</code> behaves as expected.</li>
+</ul>
+
+<h2 id="pros-and-cons-of-using-gomock">Pros and Cons of Using gomock</h2>
+
+<h3 id="pros">Pros</h3>
+<ul>
+  <li><strong>Ease of Use</strong>: Simplifies mocking with clear syntax for defining expectations.</li>
+  <li><strong>Integration</strong>: Works seamlessly with Go’s testing framework.</li>
+  <li><strong>Automatic Generation</strong>: Reduces manual effort by generating mocks from interfaces.</li>
+</ul>
+
+<h3 id="cons">Cons</h3>
+<ul>
+  <li><strong>Learning Curve</strong>: Requires understanding of mock concepts and gomock syntax.</li>
+  <li><strong>Maintenance</strong>: Generated code can add complexity to the codebase.</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Mocking is a vital technique for writing effective unit tests, and gomock makes it straightforward to create and use mocks in Go. By isolating your code from external dependencies, you can write reliable and focused tests. While gomock has its trade-offs, its benefits often outweigh its drawbacks, especially for complex projects.</p>
+
+<p>Try incorporating gomock into your testing workflow to streamline your development process and improve code quality!</p>]]></content><author><name>Jackson Tong</name><email>tongtoan2704@gmail.com</email></author><category term="go" /><category term="testing" /><summary type="html"><![CDATA[Unit testing is a critical aspect of software development, ensuring that your code behaves as expected. However, testing code that interacts with external systems, such as databases or APIs, can be challenging. Mocking comes to the rescue by simulating external dependencies, allowing you to test your code in isolation.]]></summary></entry><entry><title type="html">Setting Up a VSCode Devcontainer Using Docker Compose</title><link href="/2024/12/31/setting-up-a-vscode-devcontainer-using-docker-compose.html" rel="alternate" type="text/html" title="Setting Up a VSCode Devcontainer Using Docker Compose" /><published>2024-12-31T00:00:00+00:00</published><updated>2024-12-31T00:00:00+00:00</updated><id>/2024/12/31/setting-up-a-vscode-devcontainer-using-docker-compose</id><content type="html" xml:base="/2024/12/31/setting-up-a-vscode-devcontainer-using-docker-compose.html"><![CDATA[<p>Setting up a development environment can sometimes be challenging, especially when multiple services are involved. Fortunately, with Docker Compose and VSCode Devcontainers, you can create a streamlined setup that includes all necessary dependencies and services for your project.</p>
 
 <p>This tutorial will guide you through setting up a VSCode Devcontainer for a Go project using Docker Compose. With this setup, you can run multiple services like PostgreSQL and pgAdmin alongside your application.</p>
 
