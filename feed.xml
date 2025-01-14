@@ -1,4 +1,159 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.4">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2025-01-11T11:10:05+00:00</updated><id>/feed.xml</id><title type="html">BrickCrafted</title><subtitle>Welcome to BrickCrafted, my personal blog where I share my experiences, insights, and tips about coding and software architecture.</subtitle><author><name>Jackson Tong</name><email>tongtoan2704@gmail.com</email></author><entry><title type="html">Using gomock to mock Interfaces in Go</title><link href="/2025/01/11/using-gomock-to-mock-interfaces-in-go.html" rel="alternate" type="text/html" title="Using gomock to mock Interfaces in Go" /><published>2025-01-11T00:00:00+00:00</published><updated>2025-01-11T00:00:00+00:00</updated><id>/2025/01/11/using-gomock-to-mock-interfaces-in-go</id><content type="html" xml:base="/2025/01/11/using-gomock-to-mock-interfaces-in-go.html"><![CDATA[<p>Unit testing is a critical aspect of software development, ensuring that your code behaves as expected. However, testing code that interacts with external systems, such as databases or APIs, can be challenging. Mocking comes to the rescue by simulating external dependencies, allowing you to test your code in isolation.</p>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.4">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2025-01-14T15:35:51+00:00</updated><id>/feed.xml</id><title type="html">BrickCrafted</title><subtitle>Welcome to BrickCrafted, my personal blog where I share my experiences, insights, and tips about coding and software architecture.</subtitle><author><name>Jackson Tong</name><email>tongtoan2704@gmail.com</email></author><entry><title type="html">Handling Optional Parameters in Go with Functional Options</title><link href="/2025/01/14/handling-optional-parameters-in-go-with-functional-options.html" rel="alternate" type="text/html" title="Handling Optional Parameters in Go with Functional Options" /><published>2025-01-14T00:00:00+00:00</published><updated>2025-01-14T00:00:00+00:00</updated><id>/2025/01/14/handling-optional-parameters-in-go-with-functional-options</id><content type="html" xml:base="/2025/01/14/handling-optional-parameters-in-go-with-functional-options.html"><![CDATA[<p>Go is a powerful language that values simplicity and clarity, but newcomers might find its lack of support for optional parameters a limitation. For instance, if you’re used to languages like Python or JavaScript, creating functions with default values for parameters might seem straightforward. However, with a few idiomatic techniques, Go provides robust alternatives for handling optional parameters.</p>
+
+<p>In this post, we’ll explore how to implement optional parameters in Go using the functional options pattern.</p>
+
+<h2 id="the-problem-optional-parameters-in-go">The Problem: Optional Parameters in Go</h2>
+
+<p>Consider a scenario where you want to write a JSON response in an HTTP handler. A function for this might look like:</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span> <span class="n">WriteJSON</span><span class="p">(</span><span class="n">w</span> <span class="n">http</span><span class="o">.</span><span class="n">ResponseWriter</span><span class="p">,</span> <span class="n">data</span> <span class="n">any</span><span class="p">,</span> <span class="n">status</span> <span class="kt">int</span><span class="p">,</span> <span class="n">header</span> <span class="n">http</span><span class="o">.</span><span class="n">Header</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Content-Type"</span><span class="p">,</span> <span class="s">"application/json"</span><span class="p">)</span>
+	<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">values</span> <span class="o">:=</span> <span class="k">range</span> <span class="n">header</span> <span class="p">{</span>
+		<span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">value</span> <span class="o">:=</span> <span class="k">range</span> <span class="n">values</span> <span class="p">{</span>
+			<span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+
+	<span class="n">js</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">json</span><span class="o">.</span><span class="n">Marshal</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">http</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="s">"failed to marshal JSON"</span><span class="p">,</span> <span class="n">http</span><span class="o">.</span><span class="n">StatusInternalServerError</span><span class="p">)</span>
+		<span class="k">return</span>
+	<span class="p">}</span>
+
+	<span class="n">w</span><span class="o">.</span><span class="n">WriteHeader</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
+	<span class="n">w</span><span class="o">.</span><span class="n">Write</span><span class="p">(</span><span class="n">js</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Here, the <code class="language-plaintext highlighter-rouge">status</code> and <code class="language-plaintext highlighter-rouge">header</code> parameters can be optional:</p>
+<ul>
+  <li>If <code class="language-plaintext highlighter-rouge">status</code> is not set, it should default to <code class="language-plaintext highlighter-rouge">200</code>.</li>
+  <li>If <code class="language-plaintext highlighter-rouge">header</code> is not set, it should be ignored.</li>
+</ul>
+
+<p>While you can overload functions in other languages, Go doesn’t support this. Fortunately, we can use the <strong>functional options pattern</strong> to address this.</p>
+
+<h2 id="the-solution-functional-options-pattern">The Solution: Functional Options Pattern</h2>
+
+<h3 id="step-1-define-an-options-struct">Step 1: Define an Options Struct</h3>
+
+<p>First, define a struct to hold optional parameters:</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">type</span> <span class="n">options</span> <span class="k">struct</span> <span class="p">{</span>
+	<span class="n">status</span> <span class="o">*</span><span class="kt">int</span>
+	<span class="n">header</span> <span class="n">http</span><span class="o">.</span><span class="n">Header</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Here:</p>
+<ul>
+  <li>The <code class="language-plaintext highlighter-rouge">status</code> field is a pointer to an integer, allowing us to detect when it hasn’t been set.</li>
+  <li>The <code class="language-plaintext highlighter-rouge">header</code> field is an <code class="language-plaintext highlighter-rouge">http.Header</code> to store response headers.</li>
+</ul>
+
+<h3 id="step-2-define-option-type-and-implementations">Step 2: Define Option Type and Implementations</h3>
+
+<p>Next, define an <code class="language-plaintext highlighter-rouge">Option</code> type as a function that modifies the <code class="language-plaintext highlighter-rouge">options</code> struct:</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">type</span> <span class="n">Option</span> <span class="k">func</span><span class="p">(</span><span class="o">*</span><span class="n">options</span><span class="p">)</span> <span class="kt">error</span>
+
+<span class="k">func</span> <span class="n">WithStatus</span><span class="p">(</span><span class="n">status</span> <span class="kt">int</span><span class="p">)</span> <span class="n">Option</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="k">func</span><span class="p">(</span><span class="n">o</span> <span class="o">*</span><span class="n">options</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="n">status</span> <span class="o">&lt;</span> <span class="m">100</span> <span class="o">||</span> <span class="n">status</span> <span class="o">&gt;</span> <span class="m">599</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="n">fmt</span><span class="o">.</span><span class="n">Errorf</span><span class="p">(</span><span class="s">"invalid status code: %d"</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span>
+		<span class="p">}</span>
+		<span class="n">o</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">status</span>
+		<span class="k">return</span> <span class="no">nil</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">WithHeader</span><span class="p">(</span><span class="n">header</span> <span class="n">http</span><span class="o">.</span><span class="n">Header</span><span class="p">)</span> <span class="n">Option</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="k">func</span><span class="p">(</span><span class="n">o</span> <span class="o">*</span><span class="n">options</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+		<span class="n">o</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="n">header</span>
+		<span class="k">return</span> <span class="no">nil</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>These functions allow you to specify the status code or headers in a clean, modular way.</p>
+
+<h3 id="step-3-update-the-writejson-function">Step 3: Update the WriteJSON Function</h3>
+
+<p>Modify <code class="language-plaintext highlighter-rouge">WriteJSON</code> to accept a variadic slice of <code class="language-plaintext highlighter-rouge">Option</code> arguments:</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span> <span class="n">WriteJSON</span><span class="p">(</span><span class="n">w</span> <span class="n">http</span><span class="o">.</span><span class="n">ResponseWriter</span><span class="p">,</span> <span class="n">data</span> <span class="n">any</span><span class="p">,</span> <span class="n">opts</span> <span class="o">...</span><span class="n">Option</span><span class="p">)</span> <span class="p">{</span>
+	<span class="c">// Evaluate the options</span>
+	<span class="k">var</span> <span class="n">options</span> <span class="n">options</span>
+	<span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">opt</span> <span class="o">:=</span> <span class="k">range</span> <span class="n">opts</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">opt</span><span class="p">(</span><span class="o">&amp;</span><span class="n">options</span><span class="p">);</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+			<span class="n">http</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">err</span><span class="o">.</span><span class="n">Error</span><span class="p">(),</span> <span class="n">http</span><span class="o">.</span><span class="n">StatusInternalServerError</span><span class="p">)</span>
+			<span class="k">return</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+
+	<span class="c">// Set the status code to 200 OK if not specified</span>
+	<span class="n">status</span> <span class="o">:=</span> <span class="n">http</span><span class="o">.</span><span class="n">StatusOK</span>
+	<span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">status</span> <span class="o">=</span> <span class="o">*</span><span class="n">options</span><span class="o">.</span><span class="n">status</span>
+	<span class="p">}</span>
+
+	<span class="c">// Set the response headers</span>
+	<span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Content-Type"</span><span class="p">,</span> <span class="s">"application/json"</span><span class="p">)</span>
+	<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="o">:=</span> <span class="k">range</span> <span class="n">options</span><span class="o">.</span><span class="n">header</span> <span class="p">{</span>
+		<span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+	<span class="p">}</span>
+
+	<span class="c">// Marshal the data to JSON</span>
+	<span class="n">js</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">json</span><span class="o">.</span><span class="n">Marshal</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">http</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="s">"failed to marshal JSON"</span><span class="p">,</span> <span class="n">http</span><span class="o">.</span><span class="n">StatusInternalServerError</span><span class="p">)</span>
+		<span class="k">return</span>
+	<span class="p">}</span>
+
+	<span class="n">w</span><span class="o">.</span><span class="n">WriteHeader</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
+	<span class="n">w</span><span class="o">.</span><span class="n">Write</span><span class="p">(</span><span class="n">js</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="step-4-use-the-function">Step 4: Use the Function</h3>
+
+<p>Here’s how you can use the updated <code class="language-plaintext highlighter-rouge">WriteJSON</code> function:</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span> <span class="n">handler</span><span class="p">(</span><span class="n">w</span> <span class="n">http</span><span class="o">.</span><span class="n">ResponseWriter</span><span class="p">,</span> <span class="n">r</span> <span class="o">*</span><span class="n">http</span><span class="o">.</span><span class="n">Request</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">data</span> <span class="o">:=</span> <span class="k">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">{</span><span class="s">"message"</span><span class="o">:</span> <span class="s">"Hello, world!"</span><span class="p">}</span>
+
+	<span class="c">// Default status and no headers</span>
+	<span class="n">WriteJSON</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+	<span class="c">// Custom status</span>
+	<span class="n">WriteJSON</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">WithStatus</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">StatusCreated</span><span class="p">))</span>
+
+	<span class="c">// Custom status and headers</span>
+	<span class="n">headers</span> <span class="o">:=</span> <span class="n">http</span><span class="o">.</span><span class="n">Header</span><span class="p">{</span><span class="s">"X-Custom-Header"</span><span class="o">:</span> <span class="p">[]</span><span class="kt">string</span><span class="p">{</span><span class="s">"value"</span><span class="p">}}</span>
+	<span class="n">WriteJSON</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">WithStatus</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">StatusAccepted</span><span class="p">),</span> <span class="n">WithHeader</span><span class="p">(</span><span class="n">headers</span><span class="p">))</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="advantages-of-functional-options">Advantages of Functional Options</h3>
+
+<ol>
+  <li><strong>Flexibility</strong>: Easily add new optional parameters without breaking existing function signatures.</li>
+  <li><strong>Readability</strong>: Clear and descriptive usage with named option constructors.</li>
+  <li><strong>Error Handling</strong>: Validate inputs when constructing options.</li>
+</ol>
+
+<h3 id="considerations">Considerations</h3>
+
+<ul>
+  <li><strong>Complexity</strong>: The pattern introduces additional code for simple cases.</li>
+  <li><strong>Overhead</strong>: Parsing options adds minor runtime overhead.</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>While Go doesn’t support optional parameters natively, the functional options pattern provides an idiomatic and flexible solution. It enables you to write clean, extensible functions that handle optional parameters gracefully.</p>
+
+<p>Give it a try in your next Go project and enjoy the power of functional options!</p>]]></content><author><name>Jackson Tong</name><email>tongtoan2704@gmail.com</email></author><category term="go" /><category term="functional" /><category term="patterns" /><summary type="html"><![CDATA[Go is a powerful language that values simplicity and clarity, but newcomers might find its lack of support for optional parameters a limitation. For instance, if you’re used to languages like Python or JavaScript, creating functions with default values for parameters might seem straightforward. However, with a few idiomatic techniques, Go provides robust alternatives for handling optional parameters.]]></summary></entry><entry><title type="html">Using gomock to mock Interfaces in Go</title><link href="/2025/01/11/using-gomock-to-mock-interfaces-in-go.html" rel="alternate" type="text/html" title="Using gomock to mock Interfaces in Go" /><published>2025-01-11T00:00:00+00:00</published><updated>2025-01-11T00:00:00+00:00</updated><id>/2025/01/11/using-gomock-to-mock-interfaces-in-go</id><content type="html" xml:base="/2025/01/11/using-gomock-to-mock-interfaces-in-go.html"><![CDATA[<p>Unit testing is a critical aspect of software development, ensuring that your code behaves as expected. However, testing code that interacts with external systems, such as databases or APIs, can be challenging. Mocking comes to the rescue by simulating external dependencies, allowing you to test your code in isolation.</p>
 
 <p>In this post, we’ll explore the concept of mocking and demonstrate how to use gomock to create mock implementations of interfaces in Go. By the end, you’ll understand how to effectively test code that depends on external systems.</p>
 

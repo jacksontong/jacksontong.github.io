@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Handling Optional Parameters in Go with Functional Options | BrickCrafted</title>
+<meta name="generator" content="Jekyll v4.3.4" />
+<meta property="og:title" content="Handling Optional Parameters in Go with Functional Options" />
+<meta name="author" content="Jackson Tong" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Go is a powerful language that values simplicity and clarity, but newcomers might find its lack of support for optional parameters a limitation. For instance, if you’re used to languages like Python or JavaScript, creating functions with default values for parameters might seem straightforward. However, with a few idiomatic techniques, Go provides robust alternatives for handling optional parameters." />
+<meta property="og:description" content="Go is a powerful language that values simplicity and clarity, but newcomers might find its lack of support for optional parameters a limitation. For instance, if you’re used to languages like Python or JavaScript, creating functions with default values for parameters might seem straightforward. However, with a few idiomatic techniques, Go provides robust alternatives for handling optional parameters." />
+<link rel="canonical" href="/2025/01/14/handling-optional-parameters-in-go-with-functional-options.html" />
+<meta property="og:url" content="/2025/01/14/handling-optional-parameters-in-go-with-functional-options.html" />
+<meta property="og:site_name" content="BrickCrafted" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-01-14T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Handling Optional Parameters in Go with Functional Options" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Jackson Tong"},"dateModified":"2025-01-14T00:00:00+00:00","datePublished":"2025-01-14T00:00:00+00:00","description":"Go is a powerful language that values simplicity and clarity, but newcomers might find its lack of support for optional parameters a limitation. For instance, if you’re used to languages like Python or JavaScript, creating functions with default values for parameters might seem straightforward. However, with a few idiomatic techniques, Go provides robust alternatives for handling optional parameters.","headline":"Handling Optional Parameters in Go with Functional Options","mainEntityOfPage":{"@type":"WebPage","@id":"/2025/01/14/handling-optional-parameters-in-go-with-functional-options.html"},"url":"/2025/01/14/handling-optional-parameters-in-go-with-functional-options.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="BrickCrafted" /><link rel="icon" href="/assets/images/favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/images/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/images//favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/images//favicon-16x16.png">
+<link rel="manifest" href="/assets/images/site.webmanifest">
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">BrickCrafted</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/tags/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Handling Optional Parameters in Go with Functional Options</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2025-01-14T00:00:00+00:00" itemprop="datePublished">
+        Jan 14, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Go is a powerful language that values simplicity and clarity, but newcomers might find its lack of support for optional parameters a limitation. For instance, if you’re used to languages like Python or JavaScript, creating functions with default values for parameters might seem straightforward. However, with a few idiomatic techniques, Go provides robust alternatives for handling optional parameters.</p>
+
+<p>In this post, we’ll explore how to implement optional parameters in Go using the functional options pattern.</p>
+
+<h2 id="the-problem-optional-parameters-in-go">The Problem: Optional Parameters in Go</h2>
+
+<p>Consider a scenario where you want to write a JSON response in an HTTP handler. A function for this might look like:</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span> <span class="n">WriteJSON</span><span class="p">(</span><span class="n">w</span> <span class="n">http</span><span class="o">.</span><span class="n">ResponseWriter</span><span class="p">,</span> <span class="n">data</span> <span class="n">any</span><span class="p">,</span> <span class="n">status</span> <span class="kt">int</span><span class="p">,</span> <span class="n">header</span> <span class="n">http</span><span class="o">.</span><span class="n">Header</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Content-Type"</span><span class="p">,</span> <span class="s">"application/json"</span><span class="p">)</span>
+	<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">values</span> <span class="o">:=</span> <span class="k">range</span> <span class="n">header</span> <span class="p">{</span>
+		<span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">value</span> <span class="o">:=</span> <span class="k">range</span> <span class="n">values</span> <span class="p">{</span>
+			<span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Add</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+
+	<span class="n">js</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">json</span><span class="o">.</span><span class="n">Marshal</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">http</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="s">"failed to marshal JSON"</span><span class="p">,</span> <span class="n">http</span><span class="o">.</span><span class="n">StatusInternalServerError</span><span class="p">)</span>
+		<span class="k">return</span>
+	<span class="p">}</span>
+
+	<span class="n">w</span><span class="o">.</span><span class="n">WriteHeader</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
+	<span class="n">w</span><span class="o">.</span><span class="n">Write</span><span class="p">(</span><span class="n">js</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Here, the <code class="language-plaintext highlighter-rouge">status</code> and <code class="language-plaintext highlighter-rouge">header</code> parameters can be optional:</p>
+<ul>
+  <li>If <code class="language-plaintext highlighter-rouge">status</code> is not set, it should default to <code class="language-plaintext highlighter-rouge">200</code>.</li>
+  <li>If <code class="language-plaintext highlighter-rouge">header</code> is not set, it should be ignored.</li>
+</ul>
+
+<p>While you can overload functions in other languages, Go doesn’t support this. Fortunately, we can use the <strong>functional options pattern</strong> to address this.</p>
+
+<h2 id="the-solution-functional-options-pattern">The Solution: Functional Options Pattern</h2>
+
+<h3 id="step-1-define-an-options-struct">Step 1: Define an Options Struct</h3>
+
+<p>First, define a struct to hold optional parameters:</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">type</span> <span class="n">options</span> <span class="k">struct</span> <span class="p">{</span>
+	<span class="n">status</span> <span class="o">*</span><span class="kt">int</span>
+	<span class="n">header</span> <span class="n">http</span><span class="o">.</span><span class="n">Header</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Here:</p>
+<ul>
+  <li>The <code class="language-plaintext highlighter-rouge">status</code> field is a pointer to an integer, allowing us to detect when it hasn’t been set.</li>
+  <li>The <code class="language-plaintext highlighter-rouge">header</code> field is an <code class="language-plaintext highlighter-rouge">http.Header</code> to store response headers.</li>
+</ul>
+
+<h3 id="step-2-define-option-type-and-implementations">Step 2: Define Option Type and Implementations</h3>
+
+<p>Next, define an <code class="language-plaintext highlighter-rouge">Option</code> type as a function that modifies the <code class="language-plaintext highlighter-rouge">options</code> struct:</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">type</span> <span class="n">Option</span> <span class="k">func</span><span class="p">(</span><span class="o">*</span><span class="n">options</span><span class="p">)</span> <span class="kt">error</span>
+
+<span class="k">func</span> <span class="n">WithStatus</span><span class="p">(</span><span class="n">status</span> <span class="kt">int</span><span class="p">)</span> <span class="n">Option</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="k">func</span><span class="p">(</span><span class="n">o</span> <span class="o">*</span><span class="n">options</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="n">status</span> <span class="o">&lt;</span> <span class="m">100</span> <span class="o">||</span> <span class="n">status</span> <span class="o">&gt;</span> <span class="m">599</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="n">fmt</span><span class="o">.</span><span class="n">Errorf</span><span class="p">(</span><span class="s">"invalid status code: %d"</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span>
+		<span class="p">}</span>
+		<span class="n">o</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">status</span>
+		<span class="k">return</span> <span class="no">nil</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">WithHeader</span><span class="p">(</span><span class="n">header</span> <span class="n">http</span><span class="o">.</span><span class="n">Header</span><span class="p">)</span> <span class="n">Option</span> <span class="p">{</span>
+	<span class="k">return</span> <span class="k">func</span><span class="p">(</span><span class="n">o</span> <span class="o">*</span><span class="n">options</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+		<span class="n">o</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="n">header</span>
+		<span class="k">return</span> <span class="no">nil</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>These functions allow you to specify the status code or headers in a clean, modular way.</p>
+
+<h3 id="step-3-update-the-writejson-function">Step 3: Update the WriteJSON Function</h3>
+
+<p>Modify <code class="language-plaintext highlighter-rouge">WriteJSON</code> to accept a variadic slice of <code class="language-plaintext highlighter-rouge">Option</code> arguments:</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span> <span class="n">WriteJSON</span><span class="p">(</span><span class="n">w</span> <span class="n">http</span><span class="o">.</span><span class="n">ResponseWriter</span><span class="p">,</span> <span class="n">data</span> <span class="n">any</span><span class="p">,</span> <span class="n">opts</span> <span class="o">...</span><span class="n">Option</span><span class="p">)</span> <span class="p">{</span>
+	<span class="c">// Evaluate the options</span>
+	<span class="k">var</span> <span class="n">options</span> <span class="n">options</span>
+	<span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">opt</span> <span class="o">:=</span> <span class="k">range</span> <span class="n">opts</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">opt</span><span class="p">(</span><span class="o">&amp;</span><span class="n">options</span><span class="p">);</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+			<span class="n">http</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">err</span><span class="o">.</span><span class="n">Error</span><span class="p">(),</span> <span class="n">http</span><span class="o">.</span><span class="n">StatusInternalServerError</span><span class="p">)</span>
+			<span class="k">return</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+
+	<span class="c">// Set the status code to 200 OK if not specified</span>
+	<span class="n">status</span> <span class="o">:=</span> <span class="n">http</span><span class="o">.</span><span class="n">StatusOK</span>
+	<span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">status</span> <span class="o">=</span> <span class="o">*</span><span class="n">options</span><span class="o">.</span><span class="n">status</span>
+	<span class="p">}</span>
+
+	<span class="c">// Set the response headers</span>
+	<span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="s">"Content-Type"</span><span class="p">,</span> <span class="s">"application/json"</span><span class="p">)</span>
+	<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="o">:=</span> <span class="k">range</span> <span class="n">options</span><span class="o">.</span><span class="n">header</span> <span class="p">{</span>
+		<span class="n">w</span><span class="o">.</span><span class="n">Header</span><span class="p">()[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+	<span class="p">}</span>
+
+	<span class="c">// Marshal the data to JSON</span>
+	<span class="n">js</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">json</span><span class="o">.</span><span class="n">Marshal</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+		<span class="n">http</span><span class="o">.</span><span class="n">Error</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="s">"failed to marshal JSON"</span><span class="p">,</span> <span class="n">http</span><span class="o">.</span><span class="n">StatusInternalServerError</span><span class="p">)</span>
+		<span class="k">return</span>
+	<span class="p">}</span>
+
+	<span class="n">w</span><span class="o">.</span><span class="n">WriteHeader</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
+	<span class="n">w</span><span class="o">.</span><span class="n">Write</span><span class="p">(</span><span class="n">js</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="step-4-use-the-function">Step 4: Use the Function</h3>
+
+<p>Here’s how you can use the updated <code class="language-plaintext highlighter-rouge">WriteJSON</code> function:</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">func</span> <span class="n">handler</span><span class="p">(</span><span class="n">w</span> <span class="n">http</span><span class="o">.</span><span class="n">ResponseWriter</span><span class="p">,</span> <span class="n">r</span> <span class="o">*</span><span class="n">http</span><span class="o">.</span><span class="n">Request</span><span class="p">)</span> <span class="p">{</span>
+	<span class="n">data</span> <span class="o">:=</span> <span class="k">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">{</span><span class="s">"message"</span><span class="o">:</span> <span class="s">"Hello, world!"</span><span class="p">}</span>
+
+	<span class="c">// Default status and no headers</span>
+	<span class="n">WriteJSON</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+	<span class="c">// Custom status</span>
+	<span class="n">WriteJSON</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">WithStatus</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">StatusCreated</span><span class="p">))</span>
+
+	<span class="c">// Custom status and headers</span>
+	<span class="n">headers</span> <span class="o">:=</span> <span class="n">http</span><span class="o">.</span><span class="n">Header</span><span class="p">{</span><span class="s">"X-Custom-Header"</span><span class="o">:</span> <span class="p">[]</span><span class="kt">string</span><span class="p">{</span><span class="s">"value"</span><span class="p">}}</span>
+	<span class="n">WriteJSON</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">WithStatus</span><span class="p">(</span><span class="n">http</span><span class="o">.</span><span class="n">StatusAccepted</span><span class="p">),</span> <span class="n">WithHeader</span><span class="p">(</span><span class="n">headers</span><span class="p">))</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="advantages-of-functional-options">Advantages of Functional Options</h3>
+
+<ol>
+  <li><strong>Flexibility</strong>: Easily add new optional parameters without breaking existing function signatures.</li>
+  <li><strong>Readability</strong>: Clear and descriptive usage with named option constructors.</li>
+  <li><strong>Error Handling</strong>: Validate inputs when constructing options.</li>
+</ol>
+
+<h3 id="considerations">Considerations</h3>
+
+<ul>
+  <li><strong>Complexity</strong>: The pattern introduces additional code for simple cases.</li>
+  <li><strong>Overhead</strong>: Parsing options adds minor runtime overhead.</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>While Go doesn’t support optional parameters natively, the functional options pattern provides an idiomatic and flexible solution. It enables you to write clean, extensible functions that handle optional parameters gracefully.</p>
+
+<p>Give it a try in your next Go project and enjoy the power of functional options!</p>
+
+  </div>
+
+  
+    <p class="post-tags">
+      <strong>Tags:</strong>
+      
+        <a href="/tags/go">go</a>, 
+      
+        <a href="/tags/functional">functional</a>, 
+      
+        <a href="/tags/patterns">patterns</a>
+      
+    </p>
+  
+
+  <!-- giscus comment plugin -->
+  <script src="https://giscus.app/client.js"
+    data-repo="jacksontong/jacksontong.github.io"
+    data-repo-id="R_kgDONja3sA"
+    data-category="General"
+    data-category-id="DIC_kwDONja3sM4Cll3Y"
+    data-mapping="pathname"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="preferred_color_scheme"
+    data-lang="en"
+    crossorigin="anonymous"
+    async>
+  </script><a class="u-url" href="/2025/01/14/handling-optional-parameters-in-go-with-functional-options.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">Jackson Tong</li>
+          <li><a class="u-email" href="mailto:tongtoan2704@gmail.com">tongtoan2704@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>Welcome to BrickCrafted, my personal blog where I share my experiences, insights, and tips about coding and software architecture.</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li>
+  <a rel="me" href="https://github.com/jacksontong" target="_blank" title="github">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#github"></use>
+    </svg>
+  </a>
+</li>
+<li>
+  <a rel="me" href="https://www.linkedin.com/in/jacksontong2704" target="_blank" title="linkedin">
+    <svg class="svg-icon grey">
+      <use xlink:href="/assets/minima-social-icons.svg#linkedin"></use>
+    </svg>
+  </a>
+</li>
+</ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
